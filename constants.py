@@ -9,5 +9,5 @@ adblockExtension = 'C:\\Users\\carlm\\AppData\\Local\\Google\\Chrome\\User Data\
 # Agar.io game
 gameUrl = 'https://es.agar.live/'
 defaultBotName = 'DameTuCosita'
-browserFrameHeight = 116
+browserFrameHeight = 115
 taskbarHeight = 40

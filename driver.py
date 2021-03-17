@@ -7,7 +7,8 @@ from selenium.webdriver.support import expected_conditions
 import time
 import numpy as np
 import pyautogui
-
+import os
+import PIL
 
 class AgarLiveWebdriver():
     def __init__(self, botName = defaultBotName, start = True):
@@ -19,13 +20,17 @@ class AgarLiveWebdriver():
         }
         self.__createWebdriver()
         screenWidth, screenHeight = pyautogui.size()
+        self.browserSize = (screenWidth, screenHeight - browserFrameHeight - taskbarHeight)
         self.ballCenter = {
             'x': screenWidth // 2,
             'y': (screenHeight - browserFrameHeight - taskbarHeight) // 2 + browserFrameHeight
         }
         if start:
-            self.__deactivateAds()
-            self.__startGame()
+            self.start()
+            
+    def start(self):
+        self.__deactivateAds()
+        self.__startGame()
 
     def flush(self):
         self.driver.close()
@@ -36,8 +41,20 @@ class AgarLiveWebdriver():
         y = int(velocityFactor * np.sin(angle))
         x = int(velocityFactor * np.cos(angle))
         pyautogui.moveTo(self.ballCenter['x'] + x, self.ballCenter['y'] - y)
+
+    def eject(self):
+        pyautogui.press('w')
+
+    def split(self):
+        pyautogui.press('space')
+
+    def screenshot(self):
+        filename = 'tmp_screenshot.png'
+        self.driver.save_screenshot(filename)
+        image = PIL.Image.open(filename)
+        return np.array(image)[:, :, :3]
         
-    def __isGameDone(self):
+    def isGameDone(self):
         driver = self.driver
         try:
             driver.find_element_by_id('statsContinue')
