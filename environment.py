@@ -4,27 +4,23 @@ from driver import AgarLiveWebdriver
 import time
 
 class AgarIoEnv(Env):
-    def __init__(self):
+    def __init__(self, resize_scale = 0.25):
+        print('Creating instance of AgarIoEnv')
         super(AgarIoEnv, self).__init__()
 
-        self.start_time = None
-        self.started = False
+        self.game_mass_history = None
         self.driver = AgarLiveWebdriver(start = False)
 
         # Angle, velocity, W key and space key
-        self.action_space = spaces.Box(low = 0, high = 1, shape = (1, 4))
+        self.action_space = spaces.Box(low = 0., high = 1., shape = (4,))
 
         # Current game screen
-        width = self.driver.browserSize[0]
-        height = self.driver.browserSize[1]
+        width = int(resize_scale * self.driver.browserSize[0])
+        height = int(resize_scale * self.driver.browserSize[1])
         self.observation_space = spaces.Box(low=0, high=255, shape=(height, width, 3), dtype=np.uint8)
 
 
     def step(self, action):
-        if not self.started:
-            self.driver.start()
-            self.start_time = time.time()
-
         movement_angle = 2 * np.pi * action[0]
         movement_speed = self.__getMovementSpeed(action[1])
         should_eject = action[2] > .5
@@ -39,9 +35,22 @@ class AgarIoEnv(Env):
         done = self.driver.isGameDone()
 
         current_time = time.time()
-        reward = current_time - self.start_time
+        
+        current_mass = self.driver.playerScore()
+        previous_mass = self.game_mass_history[-1]
+        self.game_mass_history.append(current_mass)
 
-        return obs, reward, done, {}
+        reward = -1
+        if done is not False:
+            # Reward is the percentage of change in masses
+            reward = (current_mass - previous_mass) / previous_mass
+
+        return obs, reward, done, {
+            'max_mass': np.max(self.game_mass_history),
+            'min_mass': np.min(self.game_mass_history),
+            'mean_mass': np.mean(self.game_mass_history),
+            'current_mass': self.game_mass_history[-1]
+        }
     
     def sampleAction(self):
         return np.random.uniform(low = .0, high = 1., size = 4)
@@ -52,12 +61,27 @@ class AgarIoEnv(Env):
         return 'fast'
 
     def __getObservation(self):
-        return self.driver.screenshot()
+        image = self.driver.screenshot()
+        image = image.resize((self.observation_space.shape[1], self.observation_space.shape[0]))
+        return np.array(image)[:, :, :3]
 
     def reset(self):
+        print('Resetting AgarIoEnv')
+        if self.game_mass_history is not None:
+            self.driver.continuePlaying()
+            self.game_mass_history = [self.driver.playerScore()]
+            return self.__getObservation()
+        else:
+            self.driver.start()
+            self.game_mass_history = [self.driver.playerScore()]
+            return self.__getObservation()
+
+    def close(self):
+        print('Closing AgarIoEnv')
         self.driver.flush()
-        self.started = False
-        self.start_time = None
+
+    def seed(self):
+        pass
 
     def render(self):
         pass

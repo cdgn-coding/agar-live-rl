@@ -4,3 +4,7 @@ gym
 numpy
 pyautogui
 Pillow
+stable_baselines
+tensorflow==1.8.0
+stable_baselines[mpi]
+tensorflow-gpu==1.8.0

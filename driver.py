@@ -51,32 +51,37 @@ class AgarLiveWebdriver():
     def screenshot(self):
         filename = 'tmp_screenshot.png'
         self.driver.save_screenshot(filename)
-        image = PIL.Image.open(filename)
-        return np.array(image)[:, :, :3]
+        return PIL.Image.open(filename)
         
     def isGameDone(self):
-        driver = self.driver
-        try:
-            driver.find_element_by_id('statsContinue')
-            return False
-        except NoSuchElementException:
-            return True
+        return not bool(self.driver.execute_script("return window.Play"))
+    
+    def playerScore(self):
+        return int(self.driver.execute_script("return window.AG_PO_SCORE_TEXT_MAKS"))
 
-    def __startGame(self):
+    def continuePlaying(self):
+        time.sleep(1)
+        continueButton = self.driver.find_element_by_css_selector('#statsContinue')
+        continueButton.click()
+        time.sleep(1)
+        self.__startGame(setNickname = False)
+
+    def __startGame(self, setNickname = True):
         driver = self.driver
         botName = self.botName
 
         wait = WebDriverWait(driver, 10)
 
         # Enter nickname
-        nickInput = wait.until(expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, "[id='nick']")))
-        nickInput.send_keys(botName)
-        time.sleep(4)
+        if setNickname:
+            nickInput = wait.until(expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, "[id='nick']")))
+            nickInput.send_keys(botName)
+            time.sleep(2)
 
         # Start to play!
         playButton = wait.until(expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, "button.btn-play-guest[type='submit']")))
         playButton.click()
-        time.sleep(4)
+        time.sleep(2.5)
 
     def __createWebdriver(self):
         options = webdriver.ChromeOptions()
