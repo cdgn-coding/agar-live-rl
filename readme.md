@@ -19,5 +19,7 @@ On the other hand, Agar live RL make use of adblocker to skip ads the ads that b
 ## Project task list
 
 - [x] Create AgarLiveDriver, a class which can instantiate and interacts with the game, hidding complexities of the automation tasks.
-- [ ] Create AgarLiveEnv, a class that will be composed by an AgarLiveDriver which implements an OpenAI gym environment
-- [ ] Build AgarLiveAgent, a class that should implement different RL methods and lastly, train it.
+- [x] Create AgarLiveEnv, a class that will be composed by an AgarLiveDriver which implements an OpenAI gym environment
+- [x] Build AgarLiveAgent, a class that should implement different RL methods and lastly.
+- [ ] Add support to run this project in a Docker container
+- [ ] Train the model and showcase results
